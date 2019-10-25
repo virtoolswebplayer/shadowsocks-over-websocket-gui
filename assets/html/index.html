@@ -39,66 +39,62 @@
                 <input type="password" class="form-control" placeholder="密码" v-model="password">
             </div>
             <div class="form-group">
-                <button type="button" class="btn form-control" v-bind:class="[ running ? 'btn-danger': 'btn-primary' ]" v-on:click="runApp()">{{ running ? '结束' : '开始'}}</button>
+                <button type="button" class="btn form-control" v-bind:class="btn-primary"
+                    v-on:click="save()">保存</button>
             </div>
         </form>
     </div>
     <!-- <div id="fakeLoader"></div> -->
     <script>
-    var {
-        ipcRenderer
-    } = require('electron');
+        var {
+            ipcRenderer
+        } = require('electron');
 
 
-    var vm = new Vue({
-        el: '#configForm',
-        data: {
-            running: false,
-            serverAddress: 'ss-over-ws.herokuapp.com',
-            serverPort: 80,
-            localPort: 1080,
-            method: 'aes-256-cfb',
-            password: 'ourvpn01010101',
-            methods: [
-                'rc4',
-                'rc4-md5',
-                'table',
-                'bf-cfb',
-                'des-cfb',
-                'rc2-cfb',
-                'idea-cfb',
-                'seed-cfb',
-                'cast5-cfb',
-                'aes-128-cfb',
-                'aes-192-cfb',
-                'aes-256-cfb',
-                'camellia-256-cfb',
-                'camellia-192-cfb',
-                'camellia-128-cfb'
-            ]
-        },
-        methods: {
-            runApp: function() {
-                // this.running = !this.running
-                if (!this.running) {
-                    ipcRenderer.send('app-start', {
+        var vm = new Vue({
+            el: '#configForm',
+            data: {
+                running: false,
+                serverAddress: 'one-home-abc.herokuapp.com',
+                serverPort: 80,
+                localPort: 1099,
+                method: 'aes-256-cfb',
+                password: 'shadowsocks-over-websocket',
+                methods: [
+                    'rc4',
+                    'rc4-md5',
+                    'table',
+                    'bf-cfb',
+                    'des-cfb',
+                    'rc2-cfb',
+                    'idea-cfb',
+                    'seed-cfb',
+                    'cast5-cfb',
+                    'aes-128-cfb',
+                    'aes-192-cfb',
+                    'aes-256-cfb',
+                    'camellia-256-cfb',
+                    'camellia-192-cfb',
+                    'camellia-128-cfb'
+                ]
+            },
+            methods: {
+                save() {
+                    ipcRenderer.send('save-config', {
                         serverAddress: this.serverAddress,
                         serverPort: this.serverPort,
                         localPort: this.localPort,
                         method: this.method,
                         password: this.password
                     })
-                } else {
-                    ipcRenderer.send('app-shutdown')
                 }
             }
-        }
 
-    });
+        });
 
-    ipcRenderer.on('sslocal-status-change', function(event, status) {
-        vm.running = status;
-    })
+        ipcRenderer.on('sslocal-status-change', function (event, status) {
+            vm.running = status;
+        })
     </script>
 </body>
 

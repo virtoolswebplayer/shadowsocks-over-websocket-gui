@@ -1,78 +1,164 @@
 const electron = require('electron');
+const path = require('path');
+const fs = require('fs');
 const log4js = require('log4js');
 const TCPRelay = require('shadowsocks-over-websocket').TCPRelay;
-const {
-  app,
-  ipcMain,
-  BrowserWindow,
-  dialog
-} = electron;
+const { app, ipcMain, BrowserWindow, Tray, Menu } = electron;
+
+// 配置容口
+let configWin = null;
+// 托盘
+let tray = null;
+// 菜单
+let contextMenu;
+// 中继器
+var relay = null;
+
+// app.dock.hide();
 
 const DEBUG = false;
 
-let win;
 var logger = log4js.getLogger('ss-over-ws-gui');
 var running = false;
-var relay = null;
 
-function createWindow() {
-
-  win = new BrowserWindow({
+// 创建配置窗口
+function createConfigWindow() {
+  configWin = new BrowserWindow({
     width: DEBUG ? 520 : 320,
     height: 500,
     resizeable: false,
     maximizable: false,
-    icon: './icon_128.ico',
+    minimizable: false,
+    icon: './icon_128.png',
+    movable: true,
     fullscreen: false,
     fullscreenable: false,
-    titleBarStyle: 'hidden',
+    titleBarStyle: 'default',
     webPreferences: {
-      devTools: DEBUG
-    }
+      devTools: DEBUG,
+    },
   });
 
-  win.loadURL(`file://${__dirname}/assets/html/index.html`);
-  win.on('closed', () => {
-    win = null;
+  configWin.loadURL(`file://${__dirname}/assets/html/index.html`);
+  configWin.on('closed', () => {
+    configWin = null;
   });
 
-  win.show();
+  // configWin.show();
 }
 
-app.on('ready', createWindow);
+const showConfigWindow = () => {
+  !configWin && createConfigWindow();
+  !configWin.isVisible() && configWin.show();
+  configWin.focus();
+};
+
+// 创建托盘
+function createTray() {
+  tray = new Tray('./normal.png');
+  tray.contextMenu = Menu.buildFromTemplate([
+    {
+      label: '运行',
+      visible: true,
+      click: function() {
+        startup();
+      },
+    },
+    {
+      label: '停止',
+      visible: false,
+      click: function() {
+        shutdown();
+      },
+    },
+    {
+      label: '配置',
+      click: function() {
+        showConfigWindow();
+      },
+    },
+    {
+      label: '退出',
+      click: async function() {
+        await quitApp();
+      },
+    },
+  ]);
+
+  tray.setToolTip('shadowsocks');
+  tray.setContextMenu(contextMenu);
+}
+
+app.on('ready', () => {
+  createTray();
+});
 
 app.on('window-all-closed', () => {
-  console.log('window all closed')
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  console.log('window all closed');
+  // app.quit();
 });
 
 app.on('activate', () => {
-  console.log('app active')
-  if (win === null) {
-    createWindow();
-  }
+  console.log('app active');
+  // if (win === null) {
+  //   createWindow();
+  // }
 });
 
-ipcMain.on('app-start', function(event, config) {
+function loadConfig() {
+  let config = fs.readFileSync(path.join(process.cwd(), 'config.json'), {
+    encoding: 'utf8',
+  });
+  return JSON.parse(config);
+}
+
+function updateMenu() {
+  contextMenu.items[0].visible = !running;
+  contextMenu.items[1].visible = running;
+}
+
+// 启动服务
+function startup() {
+  // 加载配置
+  const config = loadConfig();
+
   relay = new TCPRelay(config, true);
-  relay.bootstrap().then(function() {
-    logger.info('tcprelay is running', config);
-    running = true;
-    event.sender.send('sslocal-status-change', true);
-  }).catch(function(error) {
-    logger.error(error);
-    running = false;
-    event.sender.send('sslocal-status-change', false);
-  });
-});
+  relay
+    .bootstrap()
+    .then(function() {
+      logger.info('服务启动成功', config);
+      running = true;
+      updateMenu();
+    })
+    .catch(function(error) {
+      logger.error(error);
+      running = false;
+      updateMenu();
+    });
+}
 
-ipcMain.on('app-shutdown', function(event) {
-  relay && relay.stop().then(function() {
-    logger.info('tcprelay is stopped');
-    running = false;
-    event.sender.send('sslocal-status-change', false);
-    relay = null;
-  });
+// 停止服务
+function shutdown() {
+  relay &&
+    relay.stop().then(function() {
+      logger.info('服务已停止');
+      running = false;
+      relay = null;
+      updateMenu();
+      return Promise.resolve(true);
+    });
+  updateMenu();
+  return Promise.resolve(true);
+}
+
+// 退出程序
+async function quitApp() {
+  running && (await shutdown());
+  tray.destroy();
+  app.quit();
+}
+
+// 保存配置
+ipcMain.on('save-config', function(event, config) {
+  logger.info('save-config', config);
 });
