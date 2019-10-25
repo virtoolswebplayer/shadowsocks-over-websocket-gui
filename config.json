@@ -1,7 +1,7 @@
 {
     "localAddress": "127.0.0.1",
     "localPort": 1099,
-    "serverAddress": "one-home-abc.herokuapp.com",
+    "serverAddress": "app-name.herokuapp.com",
     "serverPort": 80,
     "password": "shadowsocks-over-websocket",
     "method": "aes-256-cfb"

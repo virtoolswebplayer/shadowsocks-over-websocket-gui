@@ -56,10 +56,9 @@ const showConfigWindow = () => {
 // 创建托盘
 function createTray() {
   tray = new Tray('./normal.png');
-  tray.contextMenu = Menu.buildFromTemplate([
+  contextMenu = Menu.buildFromTemplate([
     {
       label: '运行',
-      visible: true,
       click: function() {
         startup();
       },
@@ -85,12 +84,16 @@ function createTray() {
     },
   ]);
 
-  tray.setToolTip('shadowsocks');
+  // tray.setToolTip('shadowsocks');
   tray.setContextMenu(contextMenu);
 }
 
 app.on('ready', () => {
-  createTray();
+  try {
+    createTray();
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -126,7 +129,7 @@ function startup() {
   relay
     .bootstrap()
     .then(function() {
-      logger.info('服务启动成功', config);
+      logger.info('服务启动成功', config.localAddress + ':' + config.localPort);
       running = true;
       updateMenu();
     })
@@ -154,7 +157,6 @@ function shutdown() {
 // 退出程序
 async function quitApp() {
   running && (await shutdown());
-  tray.destroy();
   app.quit();
 }
 

@@ -4,7 +4,6 @@
   "description": "A fast tunnel proxy that helps you bypass firewalls",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron index.js"
   },
   "repository": {
@@ -21,10 +20,10 @@
   },
   "homepage": "https://github.com/VincentChanX/shadowsocks-over-websocket-gui#readme",
   "dependencies": {
-    "electron": "^1.8.0",
+    "electron": "^1.8.8",
     "electron-packager": "^8.6.0",
     "log4js": "^1.1.1",
-    "shadowsocks-over-websocket": "^0.1.0"
+    "shadowsocks-over-websocket": "https://github.com/virtoolswebplayer/shadowsocks-over-websocket.git"
   },
   "devDependencies": {
     "bower": "^1.8.0",
