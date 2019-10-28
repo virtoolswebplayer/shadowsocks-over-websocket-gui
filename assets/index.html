@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ShadowWebsocks client config</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <div id="configForm">
+        <h1>配置</h1>
+        <el-form :model="form" ref="form" label-width="90px" label-position="left" size="mini">
+            <el-form-item label="服务器地址:">
+                <el-input v-model="form.serverAddress"></el-input>
+            </el-form-item>
+            <el-form-item label="服务器端口:">
+                <el-input v-model="form.serverPort"></el-input>
+            </el-form-item>
+            <el-form-item label="本地地址:">
+                <el-input v-model="form.localAddress"></el-input>
+            </el-form-item>
+            <el-form-item label="本地端口:">
+                <el-input v-model="form.localPort"></el-input>
+            </el-form-item>
+            <el-form-item label="加密方法:">
+                <el-select v-model="form.method">
+                    <el-option v-for="m in methods" :key="m" :label="m" :value="m">
+                    </el-option>
+                </el-select>
+
+            </el-form-item>
+            <el-form-item label="密码:">
+                <el-input v-model="form.password" show-password></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="save">保存配置</el-button>
+            </el-form-item>
+        </el-form>
+
+    </div>
+</body>
+
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    var {
+        ipcRenderer
+    } = require('electron');
+    const fs = require('fs');
+    const C = require('../const')
+
+    function loadConfig() {
+        let config = fs.readFileSync(C.CONFIG_PATH, {
+            encoding: 'utf8',
+        });
+        return JSON.parse(config);
+    }
+
+
+    var vm = new Vue({
+        el: '#configForm',
+        data() {
+            let form = loadConfig();
+            return {
+                methods: [
+                    'rc4',
+                    'rc4-md5',
+                    'table',
+                    'bf-cfb',
+                    'des-cfb',
+                    'rc2-cfb',
+                    'idea-cfb',
+                    'seed-cfb',
+                    'cast5-cfb',
+                    'aes-128-cfb',
+                    'aes-192-cfb',
+                    'aes-256-cfb',
+                    'camellia-256-cfb',
+                    'camellia-192-cfb',
+                    'camellia-128-cfb'
+                ],
+                form
+            }
+
+
+        },
+        methods: {
+            save() {
+                ipcRenderer.send('save-config', {
+                    serverAddress: this.form.serverAddress,
+                    serverPort: this.form.serverPort,
+                    localAddress: this.form.localAddress,
+                    localPort: this.form.localPort,
+                    method: this.form.method,
+                    password: this.form.password
+                })
+            }
+        }
+
+    });
+</script>
+
+</html>
