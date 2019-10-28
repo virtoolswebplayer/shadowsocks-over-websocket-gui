@@ -6,13 +6,7 @@ import * as log4js from 'log4js';
 import { app, ipcMain, BrowserWindow, Tray, Menu } from 'electron';
 const TCPRelay = require('shadowsocks-over-websocket').TCPRelay;
 
-import {
-  HOME_DIR,
-  WORKDIR,
-  APP_NAME,
-  AUTO_CONFIG_URL,
-  CONFIG_PATH,
-} from './const';
+import { WORKDIR, APP_NAME, AUTO_CONFIG_URL, CONFIG_PATH } from './const';
 
 const pngResolve = png => path.join(WORKDIR, png);
 
@@ -73,6 +67,7 @@ function createConfigWindow() {
     titleBarStyle: 'default',
     webPreferences: {
       devTools: true,
+      nodeIntegration: true,
     },
   });
 
@@ -85,15 +80,15 @@ function createConfigWindow() {
   configWin = win;
 }
 
-const showConfigWindow = () => {
+function showConfigWindow() {
   !configWin && createConfigWindow();
   !configWin.isVisible() && configWin.show();
   configWin.focus();
-};
+}
 
 // 创建托盘
 function createTray() {
-  tray = new Tray(pngResolve('normal.png'));
+  tray = new Tray(pngResolve('assets/icon/normal.png'));
   contextMenu = Menu.buildFromTemplate([
     {
       label: '运行',
@@ -136,14 +131,10 @@ app.on('ready', () => {
 
 app.on('window-all-closed', () => {
   console.log('window all closed');
-  // app.quit();
 });
 
 app.on('activate', () => {
   console.log('app active');
-  // if (win === null) {
-  //   createWindow();
-  // }
 });
 
 function loadConfig() {
@@ -157,7 +148,11 @@ function loadConfig() {
 function updateMenu() {
   contextMenu.items[0].visible = !running;
   contextMenu.items[1].visible = running;
-  tray.setImage(running ? pngResolve('running.png') : pngResolve('normal.png'));
+  tray.setImage(
+    running
+      ? pngResolve('assets/icon/running.png')
+      : pngResolve('assets/icon/normal.png'),
+  );
 }
 
 // 启动服务

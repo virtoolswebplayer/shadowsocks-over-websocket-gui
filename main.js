@@ -55,6 +55,7 @@ function createConfigWindow() {
         titleBarStyle: 'default',
         webPreferences: {
             devTools: true,
+            nodeIntegration: true,
         },
     });
     win.loadURL(`file://${__dirname}/assets/index.html`);
@@ -64,14 +65,14 @@ function createConfigWindow() {
     win.show();
     configWin = win;
 }
-const showConfigWindow = () => {
+function showConfigWindow() {
     !configWin && createConfigWindow();
     !configWin.isVisible() && configWin.show();
     configWin.focus();
-};
+}
 // 创建托盘
 function createTray() {
-    tray = new electron_1.Tray(pngResolve('normal.png'));
+    tray = new electron_1.Tray(pngResolve('assets/icon/normal.png'));
     contextMenu = electron_1.Menu.buildFromTemplate([
         {
             label: '运行',
@@ -114,13 +115,9 @@ electron_1.app.on('ready', () => {
 });
 electron_1.app.on('window-all-closed', () => {
     console.log('window all closed');
-    // app.quit();
 });
 electron_1.app.on('activate', () => {
     console.log('app active');
-    // if (win === null) {
-    //   createWindow();
-    // }
 });
 function loadConfig() {
     let config = fs.readFileSync(const_1.CONFIG_PATH, {
@@ -132,7 +129,9 @@ function loadConfig() {
 function updateMenu() {
     contextMenu.items[0].visible = !running;
     contextMenu.items[1].visible = running;
-    tray.setImage(running ? pngResolve('running.png') : pngResolve('normal.png'));
+    tray.setImage(running
+        ? pngResolve('assets/icon/running.png')
+        : pngResolve('assets/icon/normal.png'));
 }
 // 启动服务
 function startup() {

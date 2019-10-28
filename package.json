@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsc -w",
     "start": "electron main.js",
-    "package": "rm -rf out && electron-packager ./ ShadowsocksOverWebSocket --out ./out  -version 1.8.8 --platform=darwin"
+    "package": "rm -rf out && electron-packager ./ ShadowWebSocks --out ./out --platform=darwin"
   },
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^12.11.7",
-    "electron": "^1.8.8",
+    "electron": "^7.0.0",
     "typescript": "^3.6.4"
   }
 }
