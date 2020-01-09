@@ -26,8 +26,14 @@ electron_1.app.dock.hide();
 let logger = log4js.getLogger('shadowwebsocks');
 let running = false;
 function initConfig() {
+    cp.execSync('mkdir -p ~/.' + const_1.APP_NAME);
+    if (!fs.existsSync(const_1.SETTING_PATH)) {
+        fs.writeFileSync(const_1.SETTING_PATH, JSON.stringify({
+            current: 'config.json',
+            pacPort: 8989,
+        }, null, 2));
+    }
     if (!fs.existsSync(const_1.CONFIG_PATH)) {
-        cp.execSync('mkdir -p ~/.' + const_1.APP_NAME);
         fs.writeFileSync(const_1.CONFIG_PATH, JSON.stringify({
             localAddress: '127.0.0.1',
             localPort: 1099,
@@ -44,12 +50,13 @@ initConfig();
 function createConfigWindow() {
     let win = new electron_1.BrowserWindow({
         title: '客户端配置',
-        width: 360,
-        height: 440,
+        width: 660,
+        height: 400,
         resizable: true,
-        maximizable: false,
+        maximizable: true,
         minimizable: false,
         movable: true,
+        modal: true,
         fullscreen: false,
         fullscreenable: false,
         titleBarStyle: 'default',
@@ -181,8 +188,10 @@ function quitApp() {
     });
 }
 // 保存配置
-electron_1.ipcMain.on('save-config', function (event, config) {
-    fs.writeFileSync(const_1.CONFIG_PATH, JSON.stringify(config, null, 2));
+electron_1.ipcMain.on('save-config', function (event, filename, content) {
+    let files = fs.readdirSync(const_1.CONFIG_DIR);
+    console.log(files);
+    fs.writeFileSync(path.join(const_1.CONFIG_DIR, `${filename}.json`), JSON.stringify(content, null, 2));
 });
 // 配置系统自动代理
 function setupSystemProxy(pac) {

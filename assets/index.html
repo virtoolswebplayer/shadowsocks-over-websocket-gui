@@ -5,38 +5,102 @@
     <title>ShadowWebsocks client config</title>
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <meta charset="utf-8">
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        ul,
+        li {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .list-item {
+            padding: 10px;
+            margin: 6px 10px;
+            cursor: pointer;
+        }
+
+        .active {
+            background-color: azure;
+        }
+
+        .el-header,
+        .el-footer {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: center;
+            line-height: 60px;
+        }
+
+        .el-aside {
+            background-color: #D3DCE6;
+            color: #333;
+            text-align: center;
+            height: 100vh;
+            overflow: auto;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: left;
+            height: 100vh;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="configForm">
-        <h1>配置</h1>
-        <el-form :model="form" ref="form" label-width="90px" label-position="left" size="mini">
-            <el-form-item label="服务器地址:">
-                <el-input v-model="form.serverAddress"></el-input>
-            </el-form-item>
-            <el-form-item label="服务器端口:">
-                <el-input v-model="form.serverPort"></el-input>
-            </el-form-item>
-            <el-form-item label="本地地址:">
-                <el-input v-model="form.localAddress"></el-input>
-            </el-form-item>
-            <el-form-item label="本地端口:">
-                <el-input v-model="form.localPort"></el-input>
-            </el-form-item>
-            <el-form-item label="加密方法:">
-                <el-select v-model="form.method">
-                    <el-option v-for="m in methods" :key="m" :label="m" :value="m">
-                    </el-option>
-                </el-select>
+    <div id="app">
+        <el-container>
+            <el-aside width="200px">
+                <ul>
+                    <li v-for="it in configs" class="list-item" :class="it === current ? 'active' : ''" :key="it"
+                        @click="current = it">{{it}}
+                    </li>
+                    <li class="list-item">
+                        <el-button type="primary" plain circle size="mini" @click="configs.push('new config')"><i
+                                class="el-icon-plus"></i>
+                        </el-button>
+                    </li>
+                </ul>
+            </el-aside>
+            <el-main>
+                <el-form :model="form" ref="form" label-width="90px" label-position="left" size="mini">
+                    <el-form-item label="服务器地址:">
+                        <el-input v-model="form.serverAddress"></el-input>
+                    </el-form-item>
+                    <el-form-item label="服务器端口:">
+                        <el-input v-model="form.serverPort"></el-input>
+                    </el-form-item>
+                    <el-form-item label="本地地址:">
+                        <el-input v-model="form.localAddress"></el-input>
+                    </el-form-item>
+                    <el-form-item label="本地端口:">
+                        <el-input v-model="form.localPort"></el-input>
+                    </el-form-item>
+                    <el-form-item label="加密方法:">
+                        <el-select v-model="form.method">
+                            <el-option v-for="m in methods" :key="m" :label="m" :value="m">
+                            </el-option>
+                        </el-select>
 
-            </el-form-item>
-            <el-form-item label="密码:">
-                <el-input v-model="form.password" show-password></el-input>
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="save">保存配置</el-button>
-            </el-form-item>
-        </el-form>
+                    </el-form-item>
+                    <el-form-item label="密码:">
+                        <el-input v-model="form.password" show-password></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="save">保存配置</el-button>
+                    </el-form-item>
+                </el-form>
+            </el-main>
+        </el-container>
 
     </div>
 </body>
@@ -47,23 +111,43 @@
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script>
     var {
+        clipboard,
         ipcRenderer
     } = require('electron');
     const fs = require('fs');
     const C = require('../const')
+    const keyCodes = {
+        V: 86,
+    }
 
-    function loadConfig() {
-        let config = fs.readFileSync(C.CONFIG_PATH, {
-            encoding: 'utf8',
-        });
-        return JSON.parse(config);
+
+
+
+    document.onkeydown = function (event) {
+        let toReturn = true
+        if (event.ctrlKey || event.metaKey) { // detect ctrl or cmd
+            if (event.which == keyCodes.V) {
+                document.activeElement.value += clipboard.readText()
+                document.activeElement.dispatchEvent(new Event('input'))
+                toReturn = false
+            }
+        }
+
+        return toReturn
+    }
+
+    function loadConfigs() {
+        // let config = fs.readFileSync(C.CONFIG_PATH, {
+        //     encoding: 'utf8',
+        // });
+        let files = fs.readdirSync(CONFIG_DIR);
+        return files;
     }
 
 
     var vm = new Vue({
-        el: '#configForm',
+        el: '#app',
         data() {
-            let form = loadConfig();
             return {
                 methods: [
                     'rc4',
@@ -82,14 +166,16 @@
                     'camellia-192-cfb',
                     'camellia-128-cfb'
                 ],
-                form
+                form: {},
+                configs: loadConfigs(),
+                current: 'herokuapp'
             }
 
 
         },
         methods: {
             save() {
-                ipcRenderer.send('save-config', {
+                ipcRenderer.send('save-config', this.current, {
                     serverAddress: this.form.serverAddress,
                     serverPort: this.form.serverPort,
                     localAddress: this.form.localAddress,
@@ -97,6 +183,7 @@
                     method: this.form.method,
                     password: this.form.password
                 })
+                vm.$notify.success('保存成功');
             }
         }
 

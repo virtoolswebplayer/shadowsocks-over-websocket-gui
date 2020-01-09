@@ -6,7 +6,14 @@ import * as log4js from 'log4js';
 import { app, ipcMain, BrowserWindow, Tray, Menu } from 'electron';
 const TCPRelay = require('shadowsocks-over-websocket').TCPRelay;
 
-import { WORKDIR, APP_NAME, AUTO_CONFIG_URL, CONFIG_PATH } from './const';
+import {
+  WORKDIR,
+  APP_NAME,
+  AUTO_CONFIG_URL,
+  CONFIG_PATH,
+  CONFIG_DIR,
+  SETTING_PATH,
+} from './const';
 
 const pngResolve = png => path.join(WORKDIR, png);
 
@@ -29,8 +36,23 @@ let logger = log4js.getLogger('shadowwebsocks');
 let running = false;
 
 function initConfig() {
+  cp.execSync('mkdir -p ~/.' + APP_NAME);
+
+  if (!fs.existsSync(SETTING_PATH)) {
+    fs.writeFileSync(
+      SETTING_PATH,
+      JSON.stringify(
+        {
+          current: 'config.json',
+          pacPort: 8989,
+        },
+        null,
+        2,
+      ),
+    );
+  }
+
   if (!fs.existsSync(CONFIG_PATH)) {
-    cp.execSync('mkdir -p ~/.' + APP_NAME);
     fs.writeFileSync(
       CONFIG_PATH,
       JSON.stringify(
@@ -56,12 +78,13 @@ initConfig();
 function createConfigWindow() {
   let win = new BrowserWindow({
     title: '客户端配置',
-    width: 360,
-    height: 440,
+    width: 660,
+    height: 400,
     resizable: true,
-    maximizable: false,
+    maximizable: true,
     minimizable: false,
     movable: true,
+    modal: true,
     fullscreen: false,
     fullscreenable: false,
     titleBarStyle: 'default',
@@ -207,8 +230,14 @@ async function quitApp() {
 }
 
 // 保存配置
-ipcMain.on('save-config', function(event, config) {
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+ipcMain.on('save-config', function(event, filename, content) {
+  let files = fs.readdirSync(CONFIG_DIR);
+  console.log(files);
+
+  fs.writeFileSync(
+    path.join(CONFIG_DIR, `${filename}.json`),
+    JSON.stringify(content, null, 2),
+  );
 });
 
 // 配置系统自动代理
