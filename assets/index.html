@@ -130,25 +130,9 @@
         V: 86,
     }
 
-
-
-
-    document.onkeydown = function (event) {
-        let toReturn = true
-        if (event.ctrlKey || event.metaKey) { // detect ctrl or cmd
-            if (event.which == keyCodes.V) {
-                document.activeElement.value += clipboard.readText()
-                document.activeElement.dispatchEvent(new Event('input'))
-                toReturn = false
-            }
-        }
-
-        return toReturn
-    }
-
     function getConfigList() {
         let files = fs.readdirSync(C.CONFIG_DIR);
-        return files.filter(it => it !== 'setting.json');
+        return files.filter(it => !['setting.json', 'proxy.pac'].includes(it));
     }
 
     function loadConfig(config) {
@@ -212,7 +196,7 @@
                 vm.$notify.success('应用成功');
             },
             createConfig() {
-                this.configs.push('new config' + new Date())
+                this.configs.push('new config' + new Date().getSeconds())
                 this.setting = loadSetting();
             },
             onBlur() {

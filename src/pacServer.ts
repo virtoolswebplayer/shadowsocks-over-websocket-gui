@@ -1,13 +1,14 @@
 import * as http from 'http';
 import * as fs from 'fs';
-import { getAsset, setupSystemProxy } from './utils';
+import { PAC_PATH } from './const';
+import { setupSystemProxy } from './utils';
 
 export class PacServer {
   private server = null;
   startup() {
     this.server = http
       .createServer((req, res) => {
-        let pac = fs.readFileSync(getAsset('proxy.pac'), {
+        let pac = fs.readFileSync(PAC_PATH, {
           encoding: 'utf8',
         });
         res.statusCode = 200;

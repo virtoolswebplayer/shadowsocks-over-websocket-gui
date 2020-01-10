@@ -2,7 +2,7 @@
   "name": "shadowsocks-websocket-gui",
   "version": "0.1.0",
   "description": "A fast tunnel proxy that helps you bypass firewalls",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "tsc -w",
     "prestart": "yarn clean && tsc",

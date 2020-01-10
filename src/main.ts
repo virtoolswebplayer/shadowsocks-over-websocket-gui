@@ -1,42 +1,41 @@
-import * as fs from 'fs';
-import * as cp from 'child_process';
-import { app } from 'electron';
+import { app, Menu } from 'electron';
 import { createTray } from './tray';
-import { APP_NAME, CONFIG_DIR, SETTING_PATH } from './const';
-
-// function initConfig() {
-//   cp.execSync('mkdir -p ~/.' + APP_NAME);
-//   if (!fs.existsSync(SETTING_PATH)) {
-//     fs.writeFileSync(
-//       SETTING_PATH,
-//       `{
-//         "current": "config.json",
-//         "pacPort": 8989,
-//       }`,
-//     );
-//   }
-// }
-
-// function loadConfig() {
-//   let setting = JSON.parse(fs.readFileSync(SETTING_PATH, { encoding: 'utf8' }));
-//   let config = fs.readFileSync(CONFIG_DIR + '/' + setting.current, {
-//     encoding: 'utf8',
-//   });
-//   return JSON.parse(config);
-// }
+import { initConfig } from './utils';
 
 // 初始化配置
-// initConfig();
+initConfig();
 
 // 任务栏中不显示
 app.dock.hide();
 
 app.on('ready', () => {
-  try {
-    createTray();
-  } catch (err) {
-    console.error(err);
+  // Check if we are on a MAC
+  if (process.platform === 'darwin') {
+    // :::tip 添加编辑菜单
+    // 若不设置，复制粘贴键盘操作无响应
+    // :::
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        {
+          label: 'Edit',
+          submenu: [
+            { role: 'undo' },
+            { role: 'redo' },
+            { type: 'separator' },
+            { role: 'cut' },
+            { role: 'copy' },
+            { role: 'paste' },
+            { role: 'pasteandmatchstyle' },
+            { role: 'delete' },
+            { role: 'selectall' },
+          ],
+        },
+      ]),
+    );
   }
+
+  // 创建托盘
+  createTray();
 });
 
 app.on('window-all-closed', () => {
