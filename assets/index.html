@@ -19,6 +19,7 @@
             list-style: none;
             padding: 0;
             margin: 0;
+            font-size: 12px;
         }
 
         .list-item {
@@ -53,19 +54,27 @@
             text-align: left;
             height: 100vh;
         }
+
+        .custom-input .el-input__inner {
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
     <div id="app">
         <el-container>
-            <el-aside width="200px">
+            <el-aside width="220px">
                 <ul>
                     <li v-for="it in configs" class="list-item" :class="it === current ? 'active' : ''" :key="it"
-                        @click="current = it">{{it}}
+                        @click="(current = it) && (editCurrent = it)" @dblclick="editConfig">
+                        <el-input ref="configInput" v-if="edit===true && current === it" v-model="editCurrent"
+                            size="mini" @blur="onBlur" @keyup.enter.native="onBlur" class="custom-input">
+                        </el-input>
+                        <span v-else>{{it}}</span>
                     </li>
                     <li class="list-item">
-                        <el-button type="primary" plain circle size="mini" @click="configs.push('new config')"><i
+                        <el-button type="primary" plain circle size="mini" @click="createConfig"><i
                                 class="el-icon-plus"></i>
                         </el-button>
                     </li>
@@ -96,7 +105,8 @@
                         <el-input v-model="form.password" show-password></el-input>
                     </el-form-item>
                     <el-form-item>
-                        <el-button type="primary" @click="save">保存配置</el-button>
+                        <el-button type="primary" @click="saveConfig">保存配置</el-button>
+                        <el-button type="primary" @click="applyConfig">应用配置</el-button>
                     </el-form-item>
                 </el-form>
             </el-main>
@@ -110,12 +120,12 @@
 <!-- import JavaScript -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script>
-    var {
+    const {
         clipboard,
         ipcRenderer
     } = require('electron');
     const fs = require('fs');
-    const C = require('../const')
+    const C = require('../dist/const')
     const keyCodes = {
         V: 86,
     }
@@ -136,14 +146,18 @@
         return toReturn
     }
 
-    function loadConfigs() {
-        // let config = fs.readFileSync(C.CONFIG_PATH, {
-        //     encoding: 'utf8',
-        // });
-        let files = fs.readdirSync(CONFIG_DIR);
-        return files;
+    function getConfigList() {
+        let files = fs.readdirSync(C.CONFIG_DIR);
+        return files.filter(it => it !== 'setting.json');
     }
 
+    function loadConfig(config) {
+        return JSON.parse(fs.readFileSync(C.CONFIG_DIR + '/' + config, 'utf-8'))
+    }
+
+    function loadSetting() {
+        return JSON.parse(fs.readFileSync(C.SETTING_PATH, 'utf-8'))
+    }
 
     var vm = new Vue({
         el: '#app',
@@ -167,24 +181,59 @@
                     'camellia-128-cfb'
                 ],
                 form: {},
-                configs: loadConfigs(),
-                current: 'herokuapp'
+                configs: getConfigList(),
+                current: 'config.json',
+                edit: false,
+                setting: {},
+                editCurrent: ''
             }
 
 
         },
-        methods: {
-            save() {
-                ipcRenderer.send('save-config', this.current, {
-                    serverAddress: this.form.serverAddress,
-                    serverPort: this.form.serverPort,
-                    localAddress: this.form.localAddress,
-                    localPort: this.form.localPort,
-                    method: this.form.method,
-                    password: this.form.password
+        watch: {
+            current(val) {
+                this.$nextTick(() => {
+                    let config = loadConfig(val);
+                    this.form = config;
                 })
-                vm.$notify.success('保存成功');
             }
+        },
+        created() {
+            this.current = loadSetting().current;
+        },
+        methods: {
+            saveConfig() {
+                fs.writeFileSync(C.CONFIG_DIR + '/' + this.current, JSON.stringify(this.form, null, 2));
+                vm.$notify.success('保存成功');
+            },
+            applyConfig() {
+                this.setting.current = this.current;
+                fs.writeFileSync(C.CONFIG_DIR + '/' + 'setting.json', JSON.stringify(this.setting, null, 2));
+                vm.$notify.success('应用成功');
+            },
+            createConfig() {
+                this.configs.push('new config' + new Date())
+                this.setting = loadSetting();
+            },
+            onBlur() {
+                this.renameConfig()
+                this.edit = false;
+            },
+            renameConfig() {
+                // console.log(C.CONFIG_DIR + '/' + this.current, C.CONFIG_DIR + '/' + this.editCurrent)
+                fs.renameSync(C.CONFIG_DIR + '/' + this.current, C.CONFIG_DIR + '/' + this.editCurrent)
+                this.updateConfigList();
+            },
+            editConfig() {
+                this.edit = true;
+                this.$nextTick(() => {
+                    this.$refs.configInput[0].focus()
+                })
+            },
+            updateConfigList() {
+                this.configs = getConfigList();
+            }
+
         }
 
     });

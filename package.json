@@ -1,34 +1,38 @@
 {
-  "name": "shadowsocks-over-websocket-gui",
+  "name": "shadowsocks-websocket-gui",
   "version": "0.1.0",
   "description": "A fast tunnel proxy that helps you bypass firewalls",
   "main": "main.js",
   "scripts": {
     "dev": "tsc -w",
-    "start": "electron main.js",
-    "package": "rm -rf out && electron-packager ./ ShadowWebSocks --out ./out --platform=darwin"
+    "prestart": "yarn clean && tsc",
+    "start": "electron dist/main.js",
+    "compile": "tsc",
+    "build": "yarn compile && yarn clean && yarn package",
+    "package": "DEBUG=electron* electron-packager ./ ShadowWebSocks --out ./out --platform=darwin",
+    "clean": "rm -rf out"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VincentChanX/shadowsocks-over-websocket-gui.git"
+    "url": "git+https://github.com/virtoolswebplayer/shadowsocks-over-websocket-gui.git"
   },
   "keywords": [
     "shadowsocks"
   ],
-  "author": "vincentchan <hci.vincentchan@gmail.com> (https://github.com/VincentChanX)",
+  "author": "vincentchan <hci.vincentchan@gmail.com> (https://github.com/virtoolswebplayer)",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/VincentChanX/shadowsocks-over-websocket-gui/issues"
+    "url": "https://github.com/virtoolswebplayer/shadowsocks-over-websocket-gui/issues"
   },
-  "homepage": "https://github.com/VincentChanX/shadowsocks-over-websocket-gui#readme",
+  "homepage": "https://github.com/virtoolswebplayer/shadowsocks-over-websocket-gui#readme",
   "dependencies": {
-    "log4js": "^5.3.0",
-    "shadowsocks-over-websocket": "https://github.com/virtoolswebplayer/shadowsocks-over-websocket.git",
+    "electron": "1.8.8",
+    "log4js": "^6.1.0",
+    "shadowsocks-websocket": "^0.2.1",
     "tslib": "^1.10.0"
   },
   "devDependencies": {
     "@types/node": "^12.11.7",
-    "electron": "^7.0.0",
     "typescript": "^3.6.4"
   }
 }
