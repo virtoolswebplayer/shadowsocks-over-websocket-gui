@@ -11,7 +11,7 @@ import {
   PAC_PATH,
 } from './const';
 
-export const getAsset = (png: string) => path.join(WORKDIR, '../assets', png);
+export const assetPath = (png: string) => path.join(WORKDIR, '../assets', png);
 
 export const readJsonSync = (path: string) => {
   return JSON.parse(fs.readFileSync(path, { encoding: 'utf8' }));
@@ -48,13 +48,12 @@ export function initConfig() {
   }
 
   if (!fs.existsSync(PAC_PATH)) {
-    cp.execSync(`cp ${getAsset(PAC_NAME)} ${PAC_PATH}`);
+    cp.execSync(`cp ${assetPath(PAC_NAME)} ${PAC_PATH}`);
   }
 }
 
 /**
  * 配置系统代理
- * @param pac
  */
 export function setupSystemProxy(state: 'on' | 'off') {
   // 配置系统自动代理
