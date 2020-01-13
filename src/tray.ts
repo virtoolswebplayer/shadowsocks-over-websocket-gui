@@ -1,16 +1,28 @@
-import { app, Tray, Menu, App } from 'electron';
+import { app, Tray, Menu, App, globalShortcut } from 'electron';
 import { proxy } from './proxyServer';
 import * as cp from 'child_process';
-import { getAsset, loadConfig } from './utils';
+import { assetPath, loadConfig } from './utils';
 import { showConfigWindow } from './configwin';
-import { CONFIG_DIR, PAC_PATH, AUTO_CONFIG_URL } from './const';
-let tray = null;
-let contextMenu = null;
+import { CONFIG_DIR, AUTO_CONFIG_URL } from './const';
+
+let tray: Tray = null;
+let contextMenu: Menu = null;
 
 export function createTray() {
-  tray = new Tray(getAsset('icon/normal.png'));
+  // 注册全局快捷键
+  globalShortcut.register('CmdOrCtrl+Shift+S', () => {
+    showConfigWindow();
+  });
 
-  contextMenu = Menu.buildFromTemplate([
+  contextMenu = createTrayMenu();
+  tray = new Tray(assetPath('icon/normal.png'));
+  tray.setContextMenu(contextMenu);
+  proxy.on('startup', updateMenu);
+  proxy.on('shutdown', updateMenu);
+}
+
+function createTrayMenu() {
+  return Menu.buildFromTemplate([
     {
       label: '运行',
       click: function() {
@@ -26,11 +38,12 @@ export function createTray() {
         proxy.shutdown();
       },
     },
+    { type: 'separator' },
     {
       label: '配置',
       submenu: Menu.buildFromTemplate([
         {
-          label: '修改配置',
+          label: '修改配置 [Cmd+Shift+S]',
           click: function() {
             showConfigWindow();
           },
@@ -58,11 +71,6 @@ export function createTray() {
       },
     },
   ]);
-
-  tray.setContextMenu(contextMenu);
-
-  proxy.on('startup', updateMenu);
-  proxy.on('shutdown', updateMenu);
 }
 
 // 更新托盘菜单及图标
@@ -70,6 +78,10 @@ function updateMenu() {
   contextMenu.items[0].visible = !proxy.running;
   contextMenu.items[1].visible = proxy.running;
   tray.setImage(
-    proxy.running ? getAsset('icon/running.png') : getAsset('icon/normal.png'),
+    proxy.running
+      ? assetPath('icon/running.png')
+      : assetPath('icon/normal.png'),
   );
 }
+
+// ipcRenderer.listeners('');

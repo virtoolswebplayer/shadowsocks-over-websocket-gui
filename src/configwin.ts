@@ -1,39 +1,41 @@
 import { BrowserWindow } from 'electron';
-import { getAsset } from './utils';
+import { assetPath } from './utils';
 
-let configWin;
+let configWin: BrowserWindow = null;
 
 // 创建配置窗口
 function createConfigWindow() {
-  let win = new BrowserWindow({
+  configWin = new BrowserWindow({
     title: '客户端配置',
     width: 660,
     height: 400,
-    resizable: false,
+    resizable: true,
     maximizable: true,
     minimizable: false,
     movable: true,
     modal: true,
     fullscreen: false,
     fullscreenable: false,
-    titleBarStyle: 'default',
+    frame: false,
+    darkTheme: true,
+    // titleBarStyle: 'hidden',
     webPreferences: {
       devTools: true,
       nodeIntegration: true,
     },
   });
-
-  win.loadURL(`file://${getAsset('index.html')}`);
-  win.on('closed', () => {
+  configWin.on('close', () => {
     configWin = null;
   });
-
-  win.show();
-  configWin = win;
+  configWin.loadURL(`file://${assetPath('index.html')}`);
+  configWin.show();
+  configWin.focus();
+  configWin.setAlwaysOnTop(true, 'modal-panel');
 }
 
 export function showConfigWindow() {
-  !configWin && createConfigWindow();
-  !configWin.isVisible() && configWin.show();
-  configWin.focus();
+  if (configWin) {
+    configWin.close();
+  }
+  createConfigWindow();
 }

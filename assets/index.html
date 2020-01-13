@@ -12,6 +12,7 @@
             margin: 0;
             padding: 0;
             height: 100%;
+            background-color: #35475a;
         }
 
         ul,
@@ -29,7 +30,9 @@
         }
 
         .active {
-            background-color: azure;
+            background-color: #e91e63;
+            border-radius: 4px;
+            color: white;
         }
 
         .el-header,
@@ -41,11 +44,15 @@
         }
 
         .el-aside {
-            background-color: #D3DCE6;
-            color: #333;
+            background-color: #35475a;
+            color: #dadada;
             text-align: center;
             height: 100vh;
             overflow: auto;
+            /* box-shadow: inset 0px 0px 16px 0px black; */
+            letter-spacing: 1px;
+            font-family: sans-serif;
+            padding-top: 30px;
         }
 
         .el-main {
@@ -53,6 +60,7 @@
             color: #333;
             text-align: left;
             height: 100vh;
+            padding-top: 40px;
         }
 
         .custom-input .el-input__inner {
@@ -61,7 +69,7 @@
     </style>
 </head>
 
-<body>
+<body style="-webkit-app-region: drag">
     <div id="app">
         <el-container>
             <el-aside width="220px">
@@ -122,8 +130,12 @@
 <script>
     const {
         clipboard,
-        ipcRenderer
+        ipcRenderer,
+        remote
     } = require('electron');
+    const {
+        proxy
+    } = remote.require('./proxyServer')
     const fs = require('fs');
     const C = require('../dist/const')
     const keyCodes = {
@@ -147,6 +159,7 @@
         el: '#app',
         data() {
             return {
+                remote,
                 methods: [
                     'rc4',
                     'rc4-md5',
@@ -193,6 +206,8 @@
             applyConfig() {
                 this.setting.current = this.current;
                 fs.writeFileSync(C.CONFIG_DIR + '/' + 'setting.json', JSON.stringify(this.setting, null, 2));
+                // 重启代理
+                proxy.startup();
                 vm.$notify.success('应用成功');
             },
             createConfig() {

@@ -72,6 +72,11 @@ class ProxyServer extends EventEmitter {
       return Promise.resolve(true);
     }
   }
+
+  async restart() {
+    await this.shutdown();
+    await this.startup();
+  }
 }
 
 export const proxy = new ProxyServer();
